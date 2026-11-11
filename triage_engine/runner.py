@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import shutil
 import argparse
 
 # Ensure workspace root is in python path
@@ -97,6 +98,18 @@ def main():
 
     print("="*60)
     print("results.json generated successfully!")
+
+    # ----------------------------------------------------------------
+    # Auto-sync to the faculty console so the UI always reflects the
+    # latest triage run without a manual copy step.
+    # ----------------------------------------------------------------
+    ui_data_path = os.path.join(WORKSPACE_ROOT, "faculty-console", "src", "data", "results.json")
+    if os.path.isdir(os.path.dirname(ui_data_path)):
+        shutil.copy2(output_path, ui_data_path)
+        print(f"\n✅ Auto-synced → faculty-console/src/data/results.json")
+    else:
+        print(f"\n⚠️  Faculty-console data dir not found; skipping UI sync.")
+        print(f"   Run manually: copy results.json faculty-console/src/data/results.json")
 
 if __name__ == "__main__":
     main()

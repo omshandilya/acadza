@@ -2,7 +2,7 @@ import os
 import json
 import re
 import time
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 
 # Attempt to load .env if python-dotenv is available, else parse manually
 try:
@@ -48,41 +48,47 @@ class GroqTriageClient:
         self,
         report: Dict[str, Any],
         question: Dict[str, Any],
-        taxonomy: Dict[str, Any]
+        taxonomy: Dict[str, Any],
+        all_reports: Optional[List[Dict[str, Any]]] = None
     ) -> Tuple[Optional[Dict[str, Any]], str, int]:
         """
         Calls Groq to evaluate a question error report.
+        When all_reports is provided (multi-report group), ALL complaints are bundled
+        into one prompt so the LLM sees the full spike context.
         Returns: (parsed_json_dict, status_string, latency_ms)
         status_string is one of: "groq_llm", "token_limit", "not_configured", "error"
         """
+        reports_to_use = all_reports if all_reports else [report]
         rid = report.get("reportId", "UNKNOWN")
+        group_label = rid if len(reports_to_use) == 1 else f"{rid}+{len(reports_to_use)-1}more"
+
         if not self.is_configured():
             return None, "not_configured", 0
 
-        prompt = self._build_prompt(report, question, taxonomy)
+        prompt = self._build_prompt(reports_to_use, question, taxonomy)
 
-        print(f"  [GROQ CALL] Connecting to Groq ({self.model}) for report {rid}...")
+        print(f"  [GROQ CALL] Connecting to Groq ({self.model}) for {group_label} ({len(reports_to_use)} report{'s' if len(reports_to_use)>1 else ''})...")
         t0 = time.time()
-        response_text, latency_ms, call_status = self._call_groq(prompt, rid)
-        
+        response_text, latency_ms, call_status = self._call_groq(prompt, group_label)
+
         if not response_text:
             return None, call_status, latency_ms
 
         parsed = self._parse_json_response(response_text)
         if not parsed:
-            print(f"  [GROQ PARSE ERROR] Model output was not valid JSON for {rid}")
+            print(f"  [GROQ PARSE ERROR] Model output was not valid JSON for {group_label}")
             return None, "parse_error", latency_ms
 
         verdict = parsed.get("verdict", "N/A")
         repair = parsed.get("repair") or "none"
         route = parsed.get("route", "N/A")
-        print(f"  [GROQ SUCCESS] {rid} evaluated in {latency_ms}ms -> verdict: {verdict} | repair: {repair} | route: {route}")
-        
+        print(f"  [GROQ SUCCESS] {group_label} evaluated in {latency_ms}ms -> verdict: {verdict} | repair: {repair} | route: {route}")
+
         return parsed, "groq_llm", latency_ms
 
     def _build_prompt(
         self,
-        report: Dict[str, Any],
+        reports: List[Dict[str, Any]],
         question: Dict[str, Any],
         taxonomy: Dict[str, Any]
     ) -> str:
@@ -96,6 +102,27 @@ class GroqTriageClient:
 
         verdicts_list = list(taxonomy.get("verdicts", {}).keys())
         repairs_list = list(taxonomy.get("repairs", {}).keys())
+
+        # Build student reports section — all complaints about this question bundled together
+        if len(reports) == 1:
+            r = reports[0]
+            reports_section = f"""### STUDENT REPORT (1 complaint):
+- Report ID: {r.get('reportId')}
+- Student ID: {r.get('studentId')}
+- Source: {r.get('source')}
+- Student Comment: \"{r.get('comment')}\""""
+        else:
+            lines = [f"### STUDENT REPORTS ({len(reports)} complaints on this question — multi-student spike):"]
+            for i, r in enumerate(reports, 1):
+                lines.append(f"\nReport {i}:")
+                lines.append(f"- Report ID: {r.get('reportId')}")
+                lines.append(f"- Student ID: {r.get('studentId')}")
+                lines.append(f"- Source: {r.get('source')}")
+                lines.append(f"- Student Comment: \"{r.get('comment')}\"")
+            lines.append(f"\nNOTE: {len(reports)} students complained about the SAME question. "
+                         f"This significantly increases the likelihood of a real defect. "
+                         f"Weight your verdict accordingly.")
+            reports_section = "\n".join(lines)
 
         return f"""You are the Chief Academic Triage Officer for JEE/NEET at Acadza.
 Evaluate this student error report on a question with strict scientific and mathematical rigor.
@@ -118,11 +145,7 @@ Evaluate this student error report on a question with strict scientific and math
 ### STORED DATABASE SOLUTION:
 {q_solution}
 
-### STUDENT REPORT:
-- Report ID: {report.get('reportId')}
-- Student ID: {report.get('studentId')}
-- Source: {report.get('source')}
-- Student Comment: "{report.get('comment')}"
+{reports_section}
 
 ### TAXONOMY DEFINITIONS:
 Allowed Verdicts: {json.dumps(verdicts_list)}
@@ -176,7 +199,7 @@ Return your decision strictly as a JSON object matching this schema:
             ],
             "response_format": {"type": "json_object"},
             "temperature": 0.1,
-            "max_tokens": 1024
+            "max_tokens": 2048
         }
 
         t0 = time.time()

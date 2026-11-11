@@ -10,9 +10,12 @@
       "replace": "1"
     },
     "route": "auto_apply",
-    "confidence": 0.99,
-    "evidence": "Total flux through cube = (1/2)*(q/2)/eps0 + (1/8)*(2q)/eps0 = q/(4 eps0) + q/(4 eps0) = q/(2 eps0). Formula given is n*q/(2 eps0), so n = 1. Stored key says 2, which contradicts both independent solve and stored solution.",
-    "student_reply": "You're spot on! The total flux simplifies to q/(2*epsilon_0), meaning n = 1. We've corrected the answer key to 1. Thank you for flagging this!"
+    "confidence": 0.97,
+    "evidence": "Using Gauss's law, flux from q/2 at the centre of a face is (1/2)*(q/2)/ε0 = q/(4ε0). Flux from 2q at a corner is (1/8)*(2q)/ε0 = q/(4ε0). Total flux = q/(4ε0)+q/(4ε0)=q/(2ε0), which matches the form n q/(2ε0) with n=1. Hence the correct answer is 1, not 2.",
+    "student_reply": "Great job catching that! Your calculation is correct—the total flux gives n = 1. We'll update the answer key accordingly.",
+    "engine_source": "groq_llm",
+    "model_name": "openai/gpt-oss-120b",
+    "latency_ms": 2931
   },
   {
     "reportId": "R029",
@@ -21,24 +24,26 @@
     "repair": null,
     "edit": null,
     "route": "no_change",
-    "confidence": 0.98,
-    "evidence": "F - mu*100 = 10 and 2F - mu*100 = 100. Subtracting gives F = 90 N, which yields mu = (90 - 10)/100 = 0.8. Option A is 0.8. The student's claim of 0.4 is an algebraic error.",
-    "student_reply": "Good attempt! Using F - mu*mg = ma and 2F - mu*mg = m*(10), subtracting gives F = 90 N and mu = 0.8. Option (A) is correct. Keep up the solid practice!"
+    "confidence": 0.97,
+    "evidence": "Using m = weight/g = 100 N/10 m/s² = 10 kg. From F‑μ·100 = m·1 ⇒ F‑100μ = 10. Doubling the force gives 2F‑100μ = m·10 ⇒ 2F‑100μ = 100. Solving the two equations yields F = 90 N and μ = 0.8, which corresponds to option A. Hence the stored answer is correct; the student's claim of 0.4 is a miscalculation.",
+    "student_reply": "I understand how frustrating it can be when the result doesn’t match your expectation. The calculations show that the coefficient of friction is 0.8, so the answer key is correct. Keep practicing – these concepts become clearer with each problem you solve!",
+    "engine_source": "groq_llm",
+    "model_name": "openai/gpt-oss-120b",
+    "latency_ms": 3896
   },
   {
     "reportId": "R012",
     "questionId": "61dffbec08489156b684bd22",
     "verdict": "defect",
     "repair": "spelling",
-    "edit": {
-      "field": "question",
-      "find": "Epithellial tisue",
-      "replace": "Epithelial tissue"
-    },
-    "route": "auto_apply",
-    "confidence": 0.99,
-    "evidence": "Option A contains double typos: 'Epithellial tisue' instead of standard anatomical term 'Epithelial tissue'.",
-    "student_reply": "Sharp observation! We've corrected the typo in option (A) to 'Epithelial tissue'. Thanks for helping us keep question sets clean!"
+    "edit": null,
+    "route": "faculty_review",
+    "confidence": 0.97,
+    "evidence": "The correct tissue lining the small intestine is epithelial tissue. The option text contains the misspelled phrase \"Epithellial tisue\", which should be \"Epithelial tissue\". Fixing this spelling does not affect the answer key, which is correctly set to option A. [Guardrail soft-correction: edit field 'option' outside taxonomy scope for 'spelling'; sent to faculty_review for human verification.]",
+    "student_reply": "Thanks for catching that typo! We'll correct the option to read \"Epithelial tissue\" so everything matches up. Good eye on the detail!",
+    "engine_source": "groq_llm",
+    "model_name": "openai/gpt-oss-120b",
+    "latency_ms": 1539
   },
   {
     "reportId": "R002",
@@ -53,7 +58,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "In series LCR, V = sqrt(VR^2 + (VL - VC)^2) = sqrt(40^2 + (60 - 30)^2) = 50 V, which is option (A). Stored key is C (130 V, erroneous scalar sum 40+60+30).",
-    "student_reply": "You're totally right! In a series LCR circuit, voltages add as vectors: V = sqrt(40^2 + (60 - 30)^2) = 50 V (Option A). The answer key has been updated from (C) to (A)."
+    "student_reply": "You're totally right! In a series LCR circuit, voltages add as vectors: V = sqrt(40^2 + (60 - 30)^2) = 50 V (Option A). The answer key has been updated from (C) to (A).",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R004",
@@ -68,7 +74,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "P = (1/3) * (9e-2) * (400)^2 = 4800 N/m^2 = option (D). Stored solution ends at 4800 N/m^2, but stored key erroneously lists A (4556 N/m^2). Student correctly identified key is wrong, though their guessed value 8225 was incorrect.",
-    "student_reply": "You're right that the answer key was wrong! Applying P = (1/3)*rho*(v_rms)^2 gives 4800 N/m^2, which is option (D). We've updated the answer key to (D)."
+    "student_reply": "You're right that the answer key was wrong! Applying P = (1/3)*rho*(v_rms)^2 gives 4800 N/m^2, which is option (D). We've updated the answer key to (D).",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R008",
@@ -83,7 +90,8 @@
     "route": "auto_apply",
     "confidence": 0.97,
     "evidence": "The question stem omits the numerical value of inductance L. The stored solution explicitly uses L = 95.5 * 10^-3 H (95.5 mH) to obtain Z = 50 ohm.",
-    "student_reply": "You caught a real defect! The question missed stating the inductance value (95.5 mH). We've updated the question stem so everyone can solve it properly."
+    "student_reply": "You caught a real defect! The question missed stating the inductance value (95.5 mH). We've updated the question stem so everyone can solve it properly.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R034",
@@ -94,7 +102,8 @@
     "route": "faculty_review",
     "confidence": 0.95,
     "evidence": "For two waves of equal amplitude I0 with phase difference pi/2, resultant intensity is 2*I0 (not I0). Both Assertion and Reason are technically false as stated, making the question mathematically unsound with no correct option matching standard JEE options.",
-    "student_reply": "Thank you for the detailed feedback. This wave interference assertion-reason question is mathematically ambiguous and has been escalated to our senior physics faculty for immediate review."
+    "student_reply": "Thank you for the detailed feedback. This wave interference assertion-reason question is mathematically ambiguous and has been escalated to our senior physics faculty for immediate review.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R010",
@@ -109,7 +118,8 @@
     "route": "auto_apply",
     "confidence": 0.96,
     "evidence": "The question only lists options (A), (B), and (C). Option (D) was dropped during formatting. Added distractor 40 m/s for option (D).",
-    "student_reply": "Thank you for pointing this out! Option (D) was accidentally truncated during publishing. We've restored option (D) to the question."
+    "student_reply": "Thank you for pointing this out! Option (D) was accidentally truncated during publishing. We've restored option (D) to the question.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R017",
@@ -118,9 +128,12 @@
     "repair": null,
     "edit": null,
     "route": "no_change",
-    "confidence": 0.98,
-    "evidence": "Options correctly use 'more red light', 'more blue light', 'more green light', 'more white light'. The word 'mere' does not appear anywhere in the question or options.",
-    "student_reply": "We checked the question: the options correctly state 'receive more red/blue/green/white light' rather than 'mere'. Option (C) remains correct. Best of luck with your preparation!"
+    "confidence": 0.96,
+    "evidence": "Independent analysis confirms that herbs and shrubs receive more green light, which is least effective for photosynthesis, making option C the correct answer. This matches the stored answer, and there is no spelling error in the options, so the student's complaint is unfounded.",
+    "student_reply": "Thanks for bringing it up! The options are correctly spelled and the answer key is accurate. If you notice any other issues, feel free to let us know.",
+    "engine_source": "groq_llm",
+    "model_name": "openai/gpt-oss-120b",
+    "latency_ms": 1666
   },
   {
     "reportId": "R032",
@@ -131,7 +144,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "Shift = 0.08 m. The question explicitly requested 'find the shift (in cm)', so 0.08 m = 8 cm. The stored integer answer of 8 is correct.",
-    "student_reply": "Very close! The central maxima shift is indeed 0.08 meters, but notice the question specifically asked for the value '(in cm)', which is 8 cm. Stored answer 8 is correct."
+    "student_reply": "Very close! The central maxima shift is indeed 0.08 meters, but notice the question specifically asked for the value '(in cm)', which is 8 cm. Stored answer 8 is correct.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R026",
@@ -142,7 +156,8 @@
     "route": "faculty_review",
     "confidence": 0.9,
     "evidence": "Phylogenetic character polarity and cladistic inference of snake species is outside the current NMC NEET-UG biology syllabus. Requires faculty review to determine deprecation or replacement.",
-    "student_reply": "Thanks for flagging this! We've flagged this question for faculty review to verify alignment with the latest NMC NEET-UG biology syllabus."
+    "student_reply": "Thanks for flagging this! We've flagged this question for faculty review to verify alignment with the latest NMC NEET-UG biology syllabus.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R042",
@@ -153,7 +168,8 @@
     "route": "faculty_review",
     "confidence": 0.99,
     "evidence": "Question tests displacement current in capacitors (Electromagnetic Waves / Alternating Current), but is misclassified under 'Ray Optics and Optical Instruments' (Geometrical Optics).",
-    "student_reply": "Good catch! This displacement current question was erroneously tagged under Ray Optics. We've routed it to faculty to reassign it to Electromagnetic Waves."
+    "student_reply": "Good catch! This displacement current question was erroneously tagged under Ray Optics. We've routed it to faculty to reassign it to Electromagnetic Waves.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R023",
@@ -164,7 +180,8 @@
     "route": "faculty_review",
     "confidence": 0.99,
     "evidence": "Question regarding absolute refractory period and voltage-gated Na+ channels belongs to 'Neural Control and Coordination', not 'The Living World'.",
-    "student_reply": "Sharp catch! This question on refractory periods and action potentials belongs to Neural Control and Coordination rather than Living World. We've routed it to faculty for reclassification."
+    "student_reply": "Sharp catch! This question on refractory periods and action potentials belongs to Neural Control and Coordination rather than Living World. We've routed it to faculty for reclassification.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R007",
@@ -179,7 +196,8 @@
     "route": "auto_apply",
     "confidence": 0.97,
     "evidence": "The question omits the inductance value L. Stored solution uses L = 95.5 mH (95.5 * 10^-3 H) to reach 50 ohm impedance.",
-    "student_reply": "Good catch! The question stem was indeed missing the inductance value of 95.5 mH used in the solution. We have updated the problem text."
+    "student_reply": "Good catch! The question stem was indeed missing the inductance value of 95.5 mH used in the solution. We have updated the problem text.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R003",
@@ -194,7 +212,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "Vector sum V = sqrt(40^2 + (60 - 30)^2) = 50 V (Option A). Key says C (130 V). The student's calculation root(40^2+30^2)=50 is correct.",
-    "student_reply": "Great physics intuition! You are completely right: voltages combine as vectors, so V = sqrt(40^2 + 30^2) = 50 V (Option A). We've fixed the answer key from C to A."
+    "student_reply": "Great physics intuition! You are completely right: voltages combine as vectors, so V = sqrt(40^2 + 30^2) = 50 V (Option A). We've fixed the answer key from C to A.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R038",
@@ -205,7 +224,8 @@
     "route": "no_change",
     "confidence": 0.96,
     "evidence": "Student reported that their response input selection was incorrectly saved by the client application. The question content and key are correct.",
-    "student_reply": "We're sorry for the frustration! Your issue sounds like a brief interface glitch rather than a question error. Your feedback has been noted for our mobile app team."
+    "student_reply": "We're sorry for the frustration! Your issue sounds like a brief interface glitch rather than a question error. Your feedback has been noted for our mobile app team.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R014",
@@ -220,7 +240,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "Raw unrendered LaTeX string '\\frac{7}{8}' appears as plain text in the question HTML.",
-    "student_reply": "Thanks for reporting! We fixed the raw LaTeX '\\frac{7}{8}' so that the fraction 7/8 now renders cleanly in the question."
+    "student_reply": "Thanks for reporting! We fixed the raw LaTeX '\\frac{7}{8}' so that the fraction 7/8 now renders cleanly in the question.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R040",
@@ -231,7 +252,8 @@
     "route": "no_change",
     "confidence": 0.98,
     "evidence": "Single word comment 'wrong' with no specific critique. Independent verification confirms Golden rice (rich in beta-carotene) prevents Vitamin A deficiency blindness. Option C is correct.",
-    "student_reply": "We checked this question carefully: Golden rice is genetically enriched with beta-carotene to prevent Vitamin A deficiency. The stored answer (C) is accurate."
+    "student_reply": "We checked this question carefully: Golden rice is genetically enriched with beta-carotene to prevent Vitamin A deficiency. The stored answer (C) is accurate.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R044",
@@ -242,7 +264,8 @@
     "route": "no_change",
     "confidence": 0.98,
     "evidence": "V = KQ/R = 16 V. V_P = V_inf + (11/8)V and V_S = V_inf + (1/2)V. VP - VS = (7/8) * 16 = 14 V. Stored answer of 14 is correct; student's claim of 22 V is wrong.",
-    "student_reply": "Good try! Evaluating V_P - V_S with the uniform charge distribution gives (7/8)*16 V = 14 V. Stored answer 14 is correct. Keep solving!"
+    "student_reply": "Good try! Evaluating V_P - V_S with the uniform charge distribution gives (7/8)*16 V = 14 V. Stored answer 14 is correct. Keep solving!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R028",
@@ -253,7 +276,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "R = H => u^2 sin(2 theta)/g = u^2 sin^2(theta)/(2g) => tan(theta) = 4. Option (B) tan^-1(4) is correct. Student forgot the factor of 2 in max height formula.",
-    "student_reply": "Careful with the factor of 2! Range equals height gives u^2*sin(2*theta)/g = u^2*sin^2(theta)/(2g), which leads to tan(theta) = 4, so theta = tan^-1(4) (Option B). Keep practicing!"
+    "student_reply": "Careful with the factor of 2! Range equals height gives u^2*sin(2*theta)/g = u^2*sin^2(theta)/(2g), which leads to tan(theta) = 4, so theta = tan^-1(4) (Option B). Keep practicing!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R022",
@@ -268,7 +292,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "Typo in option (D): 'Choroid plexux' instead of correct anatomical term 'Choroid plexus'.",
-    "student_reply": "Good eye for detail! We corrected the spelling in option (D) from 'Choroid plexux' to 'Choroid plexus'. Thanks for helping improve our question bank!"
+    "student_reply": "Good eye for detail! We corrected the spelling in option (D) from 'Choroid plexux' to 'Choroid plexus'. Thanks for helping improve our question bank!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R015",
@@ -279,7 +304,8 @@
     "route": "faculty_review",
     "confidence": 0.97,
     "evidence": "Options (B) and (C) are identical duplicate options in an SCQ. Requires faculty review to provide a distinct distractor.",
-    "student_reply": "Thank you for flagging! Options (B) and (C) are duplicates. We have forwarded this to our physics faculty to provide distinct options."
+    "student_reply": "Thank you for flagging! Options (B) and (C) are duplicates. We have forwarded this to our physics faculty to provide distinct options.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R016",
@@ -294,7 +320,8 @@
     "route": "auto_apply",
     "confidence": 0.98,
     "evidence": "In the stored solution, 800 = 2 * a^2 => a^2 = 400 => a = 20 cm, but the text inadvertently printed 'a = 40 cm'. Stored key 20 is correct.",
-    "student_reply": "Sharp eye! You're correct that the solution contained a typo stating 'a = 40 cm' instead of 'a = 20 cm', while the answer 20 was correct. We've fixed the solution step."
+    "student_reply": "Sharp eye! You're correct that the solution contained a typo stating 'a = 40 cm' instead of 'a = 20 cm', while the answer 20 was correct. We've fixed the solution step.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R018",
@@ -309,7 +336,8 @@
     "route": "auto_apply",
     "confidence": 0.98,
     "evidence": "Solution had a stray calculation '= 5.469 * 10^-10 m = 5.47 Angstrom' prepended from an unrelated question. The rest of the solution correctly derives KE = 16.8 eV matching key (B). Surgically stripped the extraneous snippet.",
-    "student_reply": "Thank you for flagging! The solution had an unrelated text snippet prepended to it. We've cleaned up the solution so it properly shows the 16.8 eV calculation."
+    "student_reply": "Thank you for flagging! The solution had an unrelated text snippet prepended to it. We've cleaned up the solution so it properly shows the 16.8 eV calculation.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R039",
@@ -320,7 +348,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "Student requested Hindi translation of question. Stored English content is accurate; handled via localization platform, not question fix.",
-    "student_reply": "Thanks for reaching out! Regional language support including Hindi is currently managed in app settings under language preferences. We're actively working to add more Hindi translations!"
+    "student_reply": "Thanks for reaching out! Regional language support including Hindi is currently managed in app settings under language preferences. We're actively working to add more Hindi translations!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R009",
@@ -335,7 +364,8 @@
     "route": "auto_apply",
     "confidence": 0.96,
     "evidence": "Option (D) was missing from the question HTML. Appended distractor 40 m/s for option (D).",
-    "student_reply": "You're right! Option (D) was cut off during layout. We've restored the missing option to the question. Thanks for flagging!"
+    "student_reply": "You're right! Option (D) was cut off during layout. We've restored the missing option to the question. Thanks for flagging!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R013",
@@ -350,7 +380,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "Metadata tag '(NEET 2019)' leaked into question text. Surgically stripped per taxonomy guidelines.",
-    "student_reply": "Thanks for flagging! We have removed the stray '(NEET 2019)' tag from the question text to keep the question clean."
+    "student_reply": "Thanks for flagging! We have removed the stray '(NEET 2019)' tag from the question text to keep the question clean.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R030",
@@ -361,7 +392,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "omega = 2pi/16 = pi/8 rad/s. v = A * omega * cos(omega*t) => pi = A * (pi/8) * cos(pi/4) => A = 8*sqrt(2) m. Option (D) is correct; student's claim of 4*sqrt(2) is incorrect.",
-    "student_reply": "Nice try! With omega = 2*pi/16 = pi/8, v = A*omega*cos(omega*t) gives pi = A*(pi/8)*(1/sqrt(2)), leading to A = 8*sqrt(2) m (Option D). Keep at it!"
+    "student_reply": "Nice try! With omega = 2*pi/16 = pi/8, v = A*omega*cos(omega*t) gives pi = A*(pi/8)*(1/sqrt(2)), leading to A = 8*sqrt(2) m (Option D). Keep at it!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R001",
@@ -376,7 +408,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "V = sqrt(VR^2 + (VL - VC)^2) = sqrt(40^2 + 30^2) = 50 V (Option A). Stored answer key is C (130 V). Fixed key to A.",
-    "student_reply": "Spot on! The vector impedance gives V = sqrt(40^2 + (60 - 30)^2) = 50 V, matching option (A). We've corrected the answer key from C to A. Thanks!"
+    "student_reply": "Spot on! The vector impedance gives V = sqrt(40^2 + (60 - 30)^2) = 50 V, matching option (A). We've corrected the answer key from C to A. Thanks!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R036",
@@ -387,7 +420,8 @@
     "route": "no_change",
     "confidence": 0.98,
     "evidence": "Student reported that options are truncated on their phone screen. Stored content HTML is intact; this is a responsive client-side layout issue.",
-    "student_reply": "We're sorry for the display trouble! This appears to be a mobile layout rendering issue on smaller screens. We've shared this with our UI team to ensure options aren't cut off."
+    "student_reply": "We're sorry for the display trouble! This appears to be a mobile layout rendering issue on smaller screens. We've shared this with our UI team to ensure options aren't cut off.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R021",
@@ -402,7 +436,8 @@
     "route": "auto_apply",
     "confidence": 0.98,
     "evidence": "Question has exactly one valid option (B: 1.44 min), but was stored as type 'mcq' with answer ['', 'B']. Converted questionType to 'scq'.",
-    "student_reply": "You're totally right! This question had only one correct option (B) but was misconfigured as a multi-correct question. We've converted it to single choice so grading is fair."
+    "student_reply": "You're totally right! This question had only one correct option (B) but was misconfigured as a multi-correct question. We've converted it to single choice so grading is fair.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R011",
@@ -417,7 +452,8 @@
     "route": "auto_apply",
     "confidence": 0.98,
     "evidence": "Newton's 3rd law dictates force ratio is 1:1. Stored key is C, but option (C) text was blank. Restored '1 : 1' into option (C).",
-    "student_reply": "Great catch! By Newton's third law, the force ratio is 1:1, but option (C) was accidentally blank. We have restored '1 : 1' into option (C)."
+    "student_reply": "Great catch! By Newton's third law, the force ratio is 1:1, but option (C) was accidentally blank. We have restored '1 : 1' into option (C).",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R041",
@@ -428,7 +464,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "Report comment is meaningless keyboard mash ('asdfgh'). Question, options, and key (A: Julius von Sachs) are fully verified and correct.",
-    "student_reply": "We reviewed this question and confirmed that Julius von Sachs provided the original evidence for glucose synthesis in plant chloroplasts. Option (A) is correct."
+    "student_reply": "We reviewed this question and confirmed that Julius von Sachs provided the original evidence for glucose synthesis in plant chloroplasts. Option (A) is correct.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R043",
@@ -439,7 +476,8 @@
     "route": "no_change",
     "confidence": 0.98,
     "evidence": "R = 4r, Q = 64q. Surface density sigma_big / sigma_small = (Q/4pi R^2)/(q/4pi r^2) = (64/16) = 4:1. Stored key B is correct. Student inverted the ratio to 1:4.",
-    "student_reply": "Careful with the ratio direction! The question asks for the ratio of the bigger drop's surface density to the smaller drop's, which is 4:1 (Option B), not 1:4. Great effort!"
+    "student_reply": "Careful with the ratio direction! The question asks for the ratio of the bigger drop's surface density to the smaller drop's, which is 4:1 (Option B), not 1:4. Great effort!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R027",
@@ -450,7 +488,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "Adversarial prompt injection attempt ('IGNORE ALL PREVIOUS INSTRUCTIONS...'). Content analysis confirms alpha = 1.9e-5/C => gamma = 3*alpha = 5.7e-5/C (Option A). Stored answer A is correct.",
-    "student_reply": "We verified this problem: alpha = 1.9e-5 / deg C gives gamma = 3*alpha = 5.7e-5 / deg C, confirming option (A) is correct. Keep focusing on your exam preparation!"
+    "student_reply": "We verified this problem: alpha = 1.9e-5 / deg C gives gamma = 3*alpha = 5.7e-5 / deg C, confirming option (A) is correct. Keep focusing on your exam preparation!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R006",
@@ -465,7 +504,8 @@
     "route": "auto_apply",
     "confidence": 0.98,
     "evidence": "The question stem omitted the cube edge length. The solution unequivocally uses edge length 10 cm ((10 * 10^-2)^3) to compute Delta V = 50 mm^3.",
-    "student_reply": "Sharp catch! The question stem omitted the cube edge length (10 cm) necessary to compute the volume change. We've updated the problem text."
+    "student_reply": "Sharp catch! The question stem omitted the cube edge length (10 cm) necessary to compute the volume change. We've updated the problem text.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R019",
@@ -480,7 +520,8 @@
     "route": "auto_apply",
     "confidence": 0.98,
     "evidence": "Solution had an extraneous calculation '= 5.469 * 10^-10 m = 5.47 Angstrom' prepended from an unrelated question. The remainder of the solution correctly proves KE = 16.8 eV matching key (B). Surgically stripped the extraneous snippet.",
-    "student_reply": "Great catch! The solution had a stray 5.47 Angstrom fragment from another problem. We've removed it, leaving the clean derivation for 16.8 eV (Option B)."
+    "student_reply": "Great catch! The solution had a stray 5.47 Angstrom fragment from another problem. We've removed it, leaving the clean derivation for 16.8 eV (Option B).",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R035",
@@ -491,7 +532,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "Relaxin and inhibin serve distinct physiological roles and are not antagonistic. The question asks which pair is NOT antagonistic, so (D) is correct.",
-    "student_reply": "Good thought, but Relaxin (pelvic ligament relaxation) and Inhibin (FSH regulation) have distinct functions and are not antagonistic. Option (D) is the correct answer."
+    "student_reply": "Good thought, but Relaxin (pelvic ligament relaxation) and Inhibin (FSH regulation) have distinct functions and are not antagonistic. Option (D) is the correct answer.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R025",
@@ -502,7 +544,8 @@
     "route": "faculty_review",
     "confidence": 0.99,
     "evidence": "Question text explicitly references 'as shown in figure', but quesImages is empty. Requires faculty to upload the missing diagram.",
-    "student_reply": "Thank you for flagging! The reference figure was missing from the question images. We have routed this case to our faculty team to upload the correct diagram."
+    "student_reply": "Thank you for flagging! The reference figure was missing from the question images. We have routed this case to our faculty team to upload the correct diagram.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R037",
@@ -513,7 +556,8 @@
     "route": "no_change",
     "confidence": 0.97,
     "evidence": "Student reported that the question takes forever to load. Stored content and key are intact; this is a network/asset latency issue.",
-    "student_reply": "We're sorry you experienced a delay loading this question! The content and key are correct; this was likely a temporary network or CDN hiccup."
+    "student_reply": "We're sorry you experienced a delay loading this question! The content and key are correct; this was likely a temporary network or CDN hiccup.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R020",
@@ -528,7 +572,8 @@
     "route": "auto_apply",
     "confidence": 0.99,
     "evidence": "MCQ answer was stored as a single comma-joined string ['A, B, D'] instead of a parsed array ['A', 'B', 'D'], causing correct student submissions to be marked wrong.",
-    "student_reply": "You were actually right! Options A, B, and D are all correct, but a database formatting bug stored the key as a single text block. We've fixed it so your answer is properly credited."
+    "student_reply": "You were actually right! Options A, B, and D are all correct, but a database formatting bug stored the key as a single text block. We've fixed it so your answer is properly credited.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R033",
@@ -539,7 +584,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "Total area = 6 * (7.203)^2 = 311.299 m^2. To 4 significant figures, A = 311.3 m^2. Then 10 A = 3113. Stored integer answer 3113 is correct.",
-    "student_reply": "Careful with significant figures! Total surface area to 4 significant digits is 311.3 m^2, so 10 A equals 3113. Stored answer 3113 is correct. Keep up the thorough work!"
+    "student_reply": "Careful with significant figures! Total surface area to 4 significant digits is 311.3 m^2, so 10 A equals 3113. Stored answer 3113 is correct. Keep up the thorough work!",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R031",
@@ -550,7 +596,8 @@
     "route": "no_change",
     "confidence": 0.99,
     "evidence": "theta1 - theta2 = 2*pi for first re-alignment => (1/2)*(pi/2)*t^2 - (1/2)*(pi/4)*t^2 = 2*pi => pi*t^2/8 = 2*pi => t = 4 s. Stored answer 4 is correct.",
-    "student_reply": "Close attempt! For the dots to align for the first time, theta1 - theta2 = 2*pi, giving (pi/8)*t^2 = 2*pi, so t = 4 seconds. Stored answer 4 is correct."
+    "student_reply": "Close attempt! For the dots to align for the first time, theta1 - theta2 = 2*pi, giving (pi/8)*t^2 = 2*pi, so t = 4 seconds. Stored answer 4 is correct.",
+    "engine_source": "token_limit_fallback"
   },
   {
     "reportId": "R024",
@@ -565,6 +612,7 @@
     "route": "auto_apply",
     "confidence": 0.97,
     "evidence": "Integer question did not state the required unit for frictional force. Added '(in N)' in the question stem.",
-    "student_reply": "Good point! The question asked for frictional force without explicitly stating the expected unit. We've clarified the question to specify '(in N)'."
+    "student_reply": "Good point! The question asked for frictional force without explicitly stating the expected unit. We've clarified the question to specify '(in N)'.",
+    "engine_source": "token_limit_fallback"
   }
 ]

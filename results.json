@@ -11,11 +11,11 @@
     },
     "route": "auto_apply",
     "confidence": 0.97,
-    "evidence": "Using Gauss's law, a charge q/2 placed at the centre of a face contributes half of its total flux, giving q/(4ε0). A charge 2q at a corner contributes one‑eighth of its total flux, also giving q/(4ε0). The sum is q/(2ε0), which matches the form n·q/(2ε0) with n=1. Hence the correct answer is 1, not 2.",
-    "student_reply": "Great job! Your calculation is correct—n equals 1. Keep trusting your reasoning; it’s the key to mastering these concepts.",
+    "evidence": "Using Gauss's law, flux from q/2 at the centre of a face is (1/2)*(q/2)/ε0 = q/(4ε0). Flux from 2q at a corner is (1/8)*(2q)/ε0 = q/(4ε0). Total flux = q/(4ε0)+q/(4ε0)=q/(2ε0), which matches the form n q/(2ε0) with n=1. Hence the correct answer is 1, not 2.",
+    "student_reply": "Great job catching that! Your calculation is correct—the total flux gives n = 1. We'll update the answer key accordingly.",
     "engine_source": "groq_llm",
     "model_name": "openai/gpt-oss-120b",
-    "latency_ms": 2427
+    "latency_ms": 2931
   },
   {
     "reportId": "R029",
@@ -25,11 +25,11 @@
     "edit": null,
     "route": "no_change",
     "confidence": 0.97,
-    "evidence": "Mass = weight/g = 100/10 = 10 kg. Let μ be the coefficient. First case: F‑μ·100 = 10 N ⇒ F = 10+100μ. Second case (force doubled): 2F‑μ·100 = 10·10 = 100 N. Substituting F gives 2(10+100μ)‑100μ = 100 ⇒ 20+100μ = 100 ⇒ μ = 0.8, which matches option A. Hence the stored answer is correct and the student’s claim of 0.4 is a miscalculation.",
-    "student_reply": "Good effort on rechecking the problem! The calculations show that μ = 0.8, so the answer key is correct. Keep practicing – these concepts become clearer with each attempt.",
+    "evidence": "Using m = weight/g = 100 N/10 m/s² = 10 kg. From F‑μ·100 = m·1 ⇒ F‑100μ = 10. Doubling the force gives 2F‑100μ = m·10 ⇒ 2F‑100μ = 100. Solving the two equations yields F = 90 N and μ = 0.8, which corresponds to option A. Hence the stored answer is correct; the student's claim of 0.4 is a miscalculation.",
+    "student_reply": "I understand how frustrating it can be when the result doesn’t match your expectation. The calculations show that the coefficient of friction is 0.8, so the answer key is correct. Keep practicing – these concepts become clearer with each problem you solve!",
     "engine_source": "groq_llm",
     "model_name": "openai/gpt-oss-120b",
-    "latency_ms": 1951
+    "latency_ms": 3896
   },
   {
     "reportId": "R012",
@@ -39,11 +39,11 @@
     "edit": null,
     "route": "faculty_review",
     "confidence": 0.97,
-    "evidence": "The correct tissue lining the small intestine is epithelial tissue. Option A contains the misspelled phrase \"Epithellial tisue\" which should be \"Epithelial tissue\". The answer key is correct, but the option text needs spelling correction. [Guardrail soft-correction: edit field 'option' outside taxonomy scope for 'spelling'; sent to faculty_review for human verification.]",
-    "student_reply": "Good catch! The option had a typo—\"Epithellial tisue\" should read \"Epithelial tissue\". I've fixed it so the question is clear for you.",
+    "evidence": "The correct tissue lining the small intestine is epithelial tissue. The option text contains the misspelled phrase \"Epithellial tisue\", which should be \"Epithelial tissue\". Fixing this spelling does not affect the answer key, which is correctly set to option A. [Guardrail soft-correction: edit field 'option' outside taxonomy scope for 'spelling'; sent to faculty_review for human verification.]",
+    "student_reply": "Thanks for catching that typo! We'll correct the option to read \"Epithelial tissue\" so everything matches up. Good eye on the detail!",
     "engine_source": "groq_llm",
     "model_name": "openai/gpt-oss-120b",
-    "latency_ms": 1701
+    "latency_ms": 1539
   },
   {
     "reportId": "R002",
@@ -128,12 +128,12 @@
     "repair": null,
     "edit": null,
     "route": "no_change",
-    "confidence": 0.95,
-    "evidence": "The correct physiological reason is that understory herbs and shrubs receive a higher proportion of green light, which is less efficiently used for photosynthesis, leading to lower rates compared to sun‑exposed plants. Option C matches this explanation, so the stored answer is correct.",
-    "student_reply": "Great job noticing details! In this case the answer key is already correct, so no changes are needed. Keep up the careful reading!",
+    "confidence": 0.96,
+    "evidence": "Independent analysis confirms that herbs and shrubs receive more green light, which is least effective for photosynthesis, making option C the correct answer. This matches the stored answer, and there is no spelling error in the options, so the student's complaint is unfounded.",
+    "student_reply": "Thanks for bringing it up! The options are correctly spelled and the answer key is accurate. If you notice any other issues, feel free to let us know.",
     "engine_source": "groq_llm",
     "model_name": "openai/gpt-oss-120b",
-    "latency_ms": 1459
+    "latency_ms": 1666
   },
   {
     "reportId": "R032",

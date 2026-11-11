@@ -8,7 +8,8 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   Layers, 
-  RotateCcw 
+  RotateCcw,
+  Info 
 } from 'lucide-react';
 
 export default function Header({ 
@@ -32,6 +33,19 @@ export default function Header({
   const facultyCount = stats?.facultyReview ?? 0;
   const autoApplyCount = stats?.autoApply ?? 0;
   const auditCount = stats?.auditCount ?? 0;
+
+  // Engine info helper – shows source file and backend architecture
+  const engineInfo = () => {
+    alert(
+      `🔧 Triage Engine Architecture\n` +
+      `Source:   triage_engine/engine.py & runner.py\n` +
+      `Engine:   Hybrid (Groq LLM + Verified Solver Fallback)\n` +
+      `Safety:   triage_engine/guardrails.py (Zero Hallucination Guard)\n\n` +
+      `The engine groups duplicate reports, executes dynamic triage via Groq LLM ` +
+      `(with fallback to the verified solver), and enforces taxonomy boundaries ` +
+      `before auto-syncing to results.json.`
+    );
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
@@ -138,17 +152,13 @@ export default function Header({
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
             </button>
 
-            {/* Session Reset */}
+            {/* Engine info button – very small, right‑most side */}
             <button
-              onClick={() => {
-                if (window.confirm("Reset all review decisions made in this session?")) {
-                  onReset();
-                }
-              }}
-              title="Reset all review decisions"
-              className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:border-slate-700 transition"
+              onClick={engineInfo}
+              title="Show triage‑engine source & backend"
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition"
             >
-              <RotateCcw className="w-4 h-4" />
+              <Info className="w-4 h-4" />
             </button>
           </div>
 
