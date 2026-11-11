@@ -7,120 +7,129 @@ import {
   Filter, 
   Clock, 
   XCircle,
-  Edit3
+  Edit3,
+  Layers
 } from 'lucide-react';
 
 export default function QueueList({
   groups,
+  allGroups,
+  qMap = {},
   selectedId,
   onSelect,
-  filterRoute,
+  filterRoute = 'all',
+  onFilterRoute,
   setFilterRoute,
-  filterSubject,
+  filterSubject = 'All',
+  onFilterSubject,
   setFilterSubject,
-  searchQuery,
+  subjects: propSubjects,
+  searchQuery = '',
+  onSearch,
   setSearchQuery,
-  decisions
+  decisions = {}
 }) {
+  const setRoute = onFilterRoute || setFilterRoute || (() => {});
+  const setSubject = onFilterSubject || setFilterSubject || (() => {});
+  const setSearch = onSearch || setSearchQuery || (() => {});
+
+  const sourceGroups = allGroups || groups || [];
+
+  // Compute live counts for each filter pill across all question groups
+  const counts = {
+    all: sourceGroups.length,
+    pending_faculty: sourceGroups.filter(g => {
+      const route = g.primaryResult?.route || g.triage?.route;
+      return route === 'faculty_review' && !decisions[g.questionId];
+    }).length,
+    auto_apply: sourceGroups.filter(g => {
+      const route = g.primaryResult?.route || g.triage?.route;
+      return route === 'auto_apply';
+    }).length,
+    no_change: sourceGroups.filter(g => {
+      const route = g.primaryResult?.route || g.triage?.route;
+      return route === 'no_change';
+    }).length,
+    decided: Object.keys(decisions).length,
+  };
+
   // Extract unique subjects
-  const subjects = ['All', ...new Set(groups.map(g => g.question?.subject).filter(Boolean))];
-
-  // Filtering
-  const filteredGroups = groups.filter(g => {
-    const q = g.question || {};
-    const primary = g.primaryResult || {};
-    const decision = decisions[g.questionId];
-
-    // Route filter
-    if (filterRoute !== 'all') {
-      if (filterRoute === 'pending_faculty') {
-        if (primary.route !== 'faculty_review' || decision) return false;
-      } else if (filterRoute === 'faculty_review' && primary.route !== 'faculty_review') {
-        return false;
-      } else if (filterRoute === 'auto_apply' && primary.route !== 'auto_apply') {
-        return false;
-      } else if (filterRoute === 'no_change' && primary.route !== 'no_change') {
-        return false;
-      } else if (filterRoute === 'decided' && !decision) {
-        return false;
-      }
-    }
-
-    // Subject filter
-    if (filterSubject !== 'All' && q.subject !== filterSubject) {
-      return false;
-    }
-
-    // Search query
-    if (searchQuery.trim()) {
-      const qText = (q[q.questionType]?.question || '').toLowerCase();
-      const comments = g.reports.map(r => r.comment.toLowerCase()).join(' ');
-      const qid = g.questionId.toLowerCase();
-      const rids = g.reports.map(r => r.reportId.toLowerCase()).join(' ');
-      const target = searchQuery.toLowerCase();
-      if (!qText.includes(target) && !comments.includes(target) && !qid.includes(target) && !rids.includes(target)) {
-        return false;
-      }
-    }
-
-    return true;
-  });
+  const subjects = propSubjects || ['All', ...new Set(sourceGroups.map(g => {
+    const q = qMap[g.questionId] || g.question || {};
+    return q.subject;
+  }).filter(Boolean))];
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+    <div className="w-full md:w-96 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-full overflow-hidden flex-shrink-0">
       
-      {/* Search and Filters Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
-        {/* Search Input */}
+      {/* Search & Filter Header */}
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
+        
+        {/* Search input */}
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by QID, topic, formula, or comment..."
+            placeholder="Search questions, chapter, concepts, comments…"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Route Filter Pills */}
         <div className="flex flex-wrap gap-1">
           {[
-            { id: 'all', label: 'All Items' },
-            { id: 'pending_faculty', label: 'Action Needed', badge: '6' },
-            { id: 'auto_apply', label: 'Auto-Apply' },
-            { id: 'no_change', label: 'No Change' },
-            { id: 'decided', label: 'Decided' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setFilterRoute(tab.id)}
-              className={`px-2.5 py-1 text-xs rounded-md font-medium transition flex items-center space-x-1 ${
-                filterRoute === tab.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              <span>{tab.label}</span>
-              {tab.badge && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-red-500 text-white font-bold">
-                  {tab.badge}
+            { id: 'all', label: 'All Items', count: counts.all },
+            { id: 'pending_faculty', label: 'Action Needed', count: counts.pending_faculty, highlight: true },
+            { id: 'auto_apply', label: 'Auto-Apply', count: counts.auto_apply },
+            { id: 'no_change', label: 'No Change', count: counts.no_change },
+            { id: 'decided', label: 'Decided', count: counts.decided },
+          ].map(tab => {
+            const isActive = filterRoute === tab.id || (tab.id === 'pending_faculty' && filterRoute === 'faculty_review');
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setRoute(tab.id)}
+                className={`px-2.5 py-1.5 text-xs rounded-md font-medium transition flex items-center space-x-1.5 cursor-pointer ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-500 font-semibold'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  isActive
+                    ? 'bg-blue-700 text-white'
+                    : tab.highlight && tab.count > 0
+                    ? 'bg-red-500 text-white'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                }`}>
+                  {tab.count}
                 </span>
-              )}
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         {/* Subject Filter Dropdown */}
         <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
           <span className="flex items-center space-x-1">
-            <Filter className="w-3 h-3" />
-            <span>Subject:</span>
+            <Filter className="w-3 h-3 text-slate-400" />
+            <span className="font-medium">Filter Subject:</span>
           </span>
           <select
             value={filterSubject}
-            onChange={(e) => setFilterSubject(e.target.value)}
-            className="text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200 focus:outline-none"
+            onChange={(e) => setSubject(e.target.value)}
+            className="text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {subjects.map(s => (
               <option key={s} value={s}>{s}</option>
@@ -129,37 +138,50 @@ export default function QueueList({
         </div>
 
         {/* Counter Info */}
-        <div className="text-[11px] text-slate-400 dark:text-slate-500 flex justify-between">
-          <span>Showing {filteredGroups.length} question groups</span>
-          <span>Ranked by Urgency Score</span>
+        <div className="text-[11px] text-slate-400 dark:text-slate-500 flex justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+          <span>Showing <strong className="text-slate-700 dark:text-slate-300">{groups.length}</strong> of {counts.all}</span>
+          <span className="font-medium">Ranked by Urgency</span>
         </div>
       </div>
 
       {/* Queue List Cards */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-        {filteredGroups.length === 0 ? (
-          <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-xs">
-            No question groups match the selected filter.
+        {groups.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-xs space-y-2">
+            <div className="text-3xl opacity-40">🔍</div>
+            <p className="font-semibold text-slate-600 dark:text-slate-300">No question groups match the selected filter.</p>
+            <button
+              onClick={() => {
+                setRoute('all');
+                setSubject('All');
+                setSearch('');
+              }}
+              className="text-xs text-blue-600 dark:text-blue-400 underline hover:no-underline font-medium"
+            >
+              Clear filters and view all
+            </button>
           </div>
         ) : (
-          filteredGroups.map(group => {
+          groups.map(group => {
             const isSelected = group.questionId === selectedId;
-            const q = group.question || {};
-            const primary = group.primaryResult || {};
-            const urgency = group.urgency;
+            const q = qMap[group.questionId] || group.question || {};
+            const primary = group.primaryResult || group.triage || {};
+            const urgency = group.urgency || { level: 'P3', levelLabel: 'Medium', score: 50, badgeColor: 'bg-slate-100 text-slate-700' };
             const decision = decisions[group.questionId];
 
-            // Clean text preview
-            const rawHtml = q[q.questionType]?.question || '';
-            const plainText = rawHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 110);
+            // Extract plain text snippet safely from question HTML
+            const rawHtml = q.question || q[q.questionType]?.question || '';
+            const plainText = rawHtml
+              ? rawHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 110)
+              : '';
 
             return (
               <div
                 key={group.questionId}
                 onClick={() => onSelect(group.questionId)}
-                className={`p-3.5 cursor-pointer transition relative border-l-4 ${
+                className={`p-3.5 cursor-pointer transition relative border-l-4 select-none ${
                   isSelected
-                    ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-600 dark:border-blue-500'
+                    ? 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 shadow-sm'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 border-transparent'
                 }`}
               >
@@ -172,7 +194,7 @@ export default function QueueList({
                     </span>
 
                     {/* Report count badge if multiple */}
-                    {group.reports.length > 1 && (
+                    {group.reports?.length > 1 && (
                       <span className="flex items-center space-x-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                         <Users className="w-3 h-3 mr-0.5" />
                         <span>{group.reports.length} reports</span>
@@ -208,40 +230,45 @@ export default function QueueList({
                   <span className="truncate max-w-[140px]">{q.chapter || 'Chapter'}</span>
                   <span>·</span>
                   <span className="uppercase text-[10px] bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded font-mono">
-                    {q.questionType}
+                    {q.questionType || 'scq'}
                   </span>
                 </div>
 
                 {/* Text snippet preview */}
-                <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed mb-2">
+                <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed mb-2 font-normal">
                   {plainText || 'No question text preview available'}
                 </p>
 
                 {/* Bottom Tags: Verdict & Route */}
-                <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center justify-between text-[10px]">
                   <div className="flex items-center space-x-1.5">
-                    {/* Route badge */}
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      primary.route === 'faculty_review'
-                        ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
-                        : primary.route === 'auto_apply'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                    <span className={`font-semibold uppercase tracking-wider ${
+                      primary.verdict === 'defect' 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : primary.verdict === 'no_error'
+                        ? 'text-slate-500'
+                        : 'text-amber-600 dark:text-amber-400'
                     }`}>
-                      {primary.route === 'faculty_review' ? 'Needs Review' : primary.route}
+                      {primary.verdict}
                     </span>
-
-                    {/* Repair tag */}
                     {primary.repair && (
-                      <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                        {primary.repair}
-                      </span>
+                      <>
+                        <span className="text-slate-300 dark:text-slate-600">&rarr;</span>
+                        <span className="font-mono text-slate-600 dark:text-slate-400">
+                          {primary.repair}
+                        </span>
+                      </>
                     )}
                   </div>
 
-                  {/* Stored Answer */}
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    Key: <strong className="text-slate-700 dark:text-slate-300">{JSON.stringify(q[q.questionType]?.answer)}</strong>
+                  <span className={`font-mono px-1.5 py-0.2 rounded font-semibold ${
+                    primary.route === 'faculty_review'
+                      ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                      : primary.route === 'auto_apply'
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  }`}>
+                    {primary.route}
                   </span>
                 </div>
               </div>
@@ -253,4 +280,3 @@ export default function QueueList({
     </div>
   );
 }
-

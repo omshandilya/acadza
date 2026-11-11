@@ -33,7 +33,7 @@ function buildGroups(questions, reports, results) {
   const rMap  = Object.fromEntries(reports.map(r => [r.reportId, r]))
   const triageMap = Object.fromEntries(results.map(t => [t.reportId, t]))
 
-  // groupReportsByQuestion returns [{questionId, reports:[...], triage:TriageResult}]
+  // groupReportsByQuestion returns [{questionId, reports:[...], primaryResult, triage, urgency}]
   const groups = groupReportsByQuestion(normalizedQs, reports, results)
   return { groups, qMap, rMap, triageMap, normalizedQs }
 }
@@ -56,53 +56,72 @@ export default function App() {
   )
 
   // ── UI state ───────────────────────────────────────────────────────────────
-  const [selectedId,   setSelectedId]   = useState(groups[0]?.questionId ?? null)
-  const [decisions,    setDecisions]    = useState({})       // {[questionId]: {action, ...}}
-  const [auditLog,     setAuditLog]     = useState([])       // [{...entry}]
-  const [filterRoute,  setFilterRoute]  = useState('all')    // 'all' | 'faculty_review' | 'auto_apply' | 'no_change' | 'decided' | 'pending'
-  const [filterSubject,setFilterSubject]= useState('All')
-  const [searchQuery,  setSearchQuery]  = useState('')
-  const [editModalGroup, setEditModalGroup] = useState(null) // group | null
-  const [showAudit,    setShowAudit]    = useState(false)
-  const [showBonus,    setShowBonus]    = useState(false)
+  const [selectedId,     setSelectedId]     = useState(groups[0]?.questionId ?? null)
+  const [decisions,      setDecisions]      = useState({})       // {[questionId]: {action, ...}}
+  const [auditLog,       setAuditLog]       = useState([])       // [{...entry}]
+  const [filterRoute,    setFilterRoute]    = useState('all')    // 'all' | 'pending_faculty' | 'auto_apply' | 'no_change' | 'decided'
+  const [filterSubject,  setFilterSubject]  = useState('All')
+  const [searchQuery,    setSearchQuery]    = useState('')
+  const [editModalGroup, setEditModalGroup] = useState(null)     // group | null
+  const [showAudit,      setShowAudit]      = useState(false)
+  const [showBonus,      setShowBonus]      = useState(false)
 
   // ── Derived stats ──────────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const facultyReview = groups.filter(g => g.triage?.route === 'faculty_review').length
-    const autoApply     = groups.filter(g => g.triage?.route === 'auto_apply').length
-    const decided       = Object.keys(decisions).length
-    const total         = groups.length
-    return { total, facultyReview, autoApply, decided, auditCount: auditLog.length }
-  }, [groups, decisions, auditLog])
+    const facultyReview = groups.filter(g => {
+      const r = g.primaryResult?.route || g.triage?.route;
+      return r === 'faculty_review';
+    }).length;
+    const autoApply = groups.filter(g => {
+      const r = g.primaryResult?.route || g.triage?.route;
+      return r === 'auto_apply';
+    }).length;
+    const decided = Object.keys(decisions).length;
+    const total = groups.length;
+    return { total, totalGroups: total, facultyReview, autoApply, decided, auditCount: auditLog.length };
+  }, [groups, decisions, auditLog]);
 
-  // ── Filtered + ordered list (derived from groups + decisions + filters) ─────
+  // ── Filtered list (derived from groups + decisions + filters) ──────────────
   const filteredGroups = useMemo(() => {
     let list = [...groups]
 
-    // Subject filter
+    // 1. Subject filter
     if (filterSubject !== 'All') {
-      list = list.filter(g => qMap[g.questionId]?.subject === filterSubject)
+      list = list.filter(g => {
+        const q = qMap[g.questionId] || g.question || {};
+        return q.subject === filterSubject;
+      });
     }
 
-    // Route filter
-    if (filterRoute === 'pending') {
-      list = list.filter(g => !decisions[g.questionId])
+    // 2. Route filter
+    if (filterRoute === 'pending_faculty' || filterRoute === 'faculty_review') {
+      list = list.filter(g => {
+        const route = g.primaryResult?.route || g.triage?.route;
+        return route === 'faculty_review';
+      });
+    } else if (filterRoute === 'auto_apply') {
+      list = list.filter(g => {
+        const route = g.primaryResult?.route || g.triage?.route;
+        return route === 'auto_apply';
+      });
+    } else if (filterRoute === 'no_change') {
+      list = list.filter(g => {
+        const route = g.primaryResult?.route || g.triage?.route;
+        return route === 'no_change';
+      });
     } else if (filterRoute === 'decided') {
-      list = list.filter(g => !!decisions[g.questionId])
-    } else if (filterRoute !== 'all') {
-      list = list.filter(g => g.triage?.route === filterRoute)
+      list = list.filter(g => !!decisions[g.questionId]);
     }
 
-    // Search
+    // 3. Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       list = list.filter(g => {
-        const question = qMap[g.questionId]
-        if (!question) return false
+        const question = qMap[g.questionId] || g.question || {}
         const qtext = (question.question || '').replace(/<[^>]+>/g, '').toLowerCase()
         const chapter = (question.chapter || '').toLowerCase()
         const subject = (question.subject || '').toLowerCase()
-        const reportComments = g.reports.map(r => (r.comment || '').toLowerCase()).join(' ')
+        const reportComments = (g.reports || []).map(r => (r.comment || '').toLowerCase()).join(' ')
         return qtext.includes(q) || chapter.includes(q) || subject.includes(q) || reportComments.includes(q)
       })
     }
@@ -110,18 +129,48 @@ export default function App() {
     return list
   }, [groups, decisions, filterSubject, filterRoute, searchQuery, qMap])
 
+  // If currently selected ID is not in filtered list, auto-select the first visible item
+  useEffect(() => {
+    if (filteredGroups.length > 0) {
+      const isStillVisible = filteredGroups.some(g => g.questionId === selectedId);
+      if (!isStillVisible) {
+        setSelectedId(filteredGroups[0].questionId);
+      }
+    }
+  }, [filteredGroups, selectedId]);
+
+  // ── Navigation Indices ─────────────────────────────────────────────────────
+  const currentIndex = useMemo(() => {
+    return filteredGroups.findIndex(g => g.questionId === selectedId);
+  }, [filteredGroups, selectedId]);
+
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < filteredGroups.length - 1;
+
+  const handlePrev = useCallback(() => {
+    if (hasPrev) {
+      setSelectedId(filteredGroups[currentIndex - 1].questionId);
+    }
+  }, [hasPrev, currentIndex, filteredGroups]);
+
+  const handleNext = useCallback(() => {
+    if (hasNext) {
+      setSelectedId(filteredGroups[currentIndex + 1].questionId);
+    }
+  }, [hasNext, currentIndex, filteredGroups]);
+
   // ── Action handlers ────────────────────────────────────────────────────────
   const addAuditEntry = useCallback((group, action, extra = {}) => {
-    const q = qMap[group.questionId]
-    const triage = group.triage
+    const q = qMap[group.questionId] || group.question || {};
+    const triage = group.primaryResult || group.triage || {};
     const entry = {
       action,
       questionId: group.questionId,
-      reportIds:  group.reports.map(r => r.reportId),
-      subject:    q?.subject,
-      chapter:    q?.chapter,
-      verdict:    triage?.verdict,
-      repair:     triage?.repair,
+      reportIds:  (group.reports || []).map(r => r.reportId),
+      subject:    q.subject,
+      chapter:    q.chapter,
+      verdict:    triage.verdict,
+      repair:     triage.repair,
       timestamp:  new Date().toISOString(),
       ...extra,
     }
@@ -162,23 +211,17 @@ export default function App() {
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
-      // Don't fire when typing in an input/textarea
+      // Don't fire when typing in an input/textarea/select
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return
       if (e.metaKey || e.ctrlKey) return
 
-      const idx = filteredGroups.findIndex(g => g.questionId === selectedId)
-
-      switch (e.key) {
+      switch (e.key.toLowerCase()) {
         case 'j': {
-          // next
-          const next = filteredGroups[Math.min(idx + 1, filteredGroups.length - 1)]
-          if (next) setSelectedId(next.questionId)
+          handleNext()
           break
         }
         case 'k': {
-          // prev
-          const prev = filteredGroups[Math.max(idx - 1, 0)]
-          if (prev) setSelectedId(prev.questionId)
+          handlePrev()
           break
         }
         case 'a': {
@@ -194,7 +237,7 @@ export default function App() {
           if (group && !decisions[selectedId]) setEditModalGroup(group)
           break
         }
-        case 'Escape': {
+        case 'escape': {
           setEditModalGroup(null)
           setShowAudit(false)
           setShowBonus(false)
@@ -205,12 +248,12 @@ export default function App() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [filteredGroups, selectedId, decisions, handleApprove, handleReject, groups])
+  }, [handleNext, handlePrev, selectedId, decisions, handleApprove, handleReject, groups])
 
   // ── Selected group ─────────────────────────────────────────────────────────
   const selectedGroup = useMemo(
-    () => groups.find(g => g.questionId === selectedId) ?? null,
-    [groups, selectedId]
+    () => groups.find(g => g.questionId === selectedId) ?? filteredGroups[0] ?? null,
+    [groups, selectedId, filteredGroups]
   )
 
   // ── Subjects list (for filter dropdown) ───────────────────────────────────
@@ -220,20 +263,25 @@ export default function App() {
   }, [normalizedQs])
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans">
       {/* Header */}
       <Header
         stats={stats}
         darkMode={darkMode}
+        setDarkMode={setDarkMode}
         onToggleDark={() => setDarkMode(d => !d)}
+        onOpenAudit={() => setShowAudit(true)}
         onShowAudit={() => setShowAudit(true)}
+        onOpenBonus={() => setShowBonus(true)}
         onShowBonus={() => setShowBonus(true)}
         onReset={handleReset}
+        filterRoute={filterRoute}
+        onSelectFilter={setFilterRoute}
       />
 
       {/* Two-panel layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Queue */}
+        {/* Left: Queue List */}
         <QueueList
           groups={filteredGroups}
           allGroups={groups}
@@ -242,31 +290,42 @@ export default function App() {
           selectedId={selectedId}
           onSelect={setSelectedId}
           filterRoute={filterRoute}
+          setFilterRoute={setFilterRoute}
           onFilterRoute={setFilterRoute}
           filterSubject={filterSubject}
+          setFilterSubject={setFilterSubject}
           onFilterSubject={setFilterSubject}
           subjects={subjects}
           searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           onSearch={setSearchQuery}
         />
 
-        {/* Right: Detail */}
+        {/* Right: Question Detail View */}
         <div className="flex-1 overflow-hidden">
           {selectedGroup ? (
             <QuestionDetail
               group={selectedGroup}
               question={qMap[selectedGroup.questionId]}
+              decision={decisions[selectedGroup.questionId]}
               decisions={decisions}
               onApprove={handleApprove}
               onReject={handleReject}
+              onOpenEdit={(group) => setEditModalGroup(group)}
               onEdit={(group) => setEditModalGroup(group)}
+              onPrev={handlePrev}
+              onNext={handleNext}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
-              <div className="text-center">
-                <div className="text-5xl mb-4">📋</div>
-                <p className="text-lg font-medium">Select a report from the queue</p>
-                <p className="text-sm mt-1">Use <kbd className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">j</kbd> / <kbd className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">k</kbd> to navigate</p>
+            <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-600">
+              <div className="text-center space-y-2">
+                <div className="text-5xl mb-2">📋</div>
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">No question selected</p>
+                <p className="text-xs text-slate-400">
+                  Select a report from the queue or clear your search/filters
+                </p>
               </div>
             </div>
           )}
@@ -300,4 +359,3 @@ export default function App() {
     </div>
   )
 }
-
