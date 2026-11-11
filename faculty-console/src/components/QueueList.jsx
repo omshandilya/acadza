@@ -261,15 +261,34 @@ export default function QueueList({
                     )}
                   </div>
 
-                  <span className={`font-mono px-1.5 py-0.2 rounded font-semibold ${
-                    primary.route === 'faculty_review'
-                      ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-                      : primary.route === 'auto_apply'
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                  }`}>
-                    {primary.route}
-                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    {/* Engine Source Badge */}
+                    <span className="text-[10px] font-medium">
+                      {primary.engine_source === 'groq_llm' ? (
+                        <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center" title="Live Groq LLM inference">
+                          ⚡ Groq
+                        </span>
+                      ) : primary.engine_source === 'token_limit_fallback' ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center" title="Token limit fallback">
+                          ⚠️ Fallback
+                        </span>
+                      ) : (
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center" title="Precomputed verified solver">
+                          🛡️ Verified
+                        </span>
+                      )}
+                    </span>
+
+                    <span className={`font-mono px-1.5 py-0.2 rounded font-semibold ${
+                      primary.route === 'faculty_review'
+                        ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                        : primary.route === 'auto_apply'
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                    }`}>
+                      {primary.route}
+                    </span>
+                  </div>
                 </div>
               </div>
             );

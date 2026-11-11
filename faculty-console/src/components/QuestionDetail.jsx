@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Send,
   Sparkles,
+  Zap,
   Info
 } from 'lucide-react';
 import { computeDiff } from '../utils/urgency';
@@ -252,7 +253,7 @@ export default function QuestionDetail({
 
         {/* 3. AI TRIAGE VERDICT & EVIDENCE CARD */}
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <div className="flex items-center space-x-2">
               <Cpu className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -260,10 +261,30 @@ export default function QuestionDetail({
               </h3>
             </div>
             
-            {/* Confidence pill */}
-            <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              Confidence: {Math.round((primaryResult.confidence || 0.95) * 100)}%
-            </span>
+            {/* Engine Source Badge & Confidence */}
+            <div className="flex items-center space-x-2 flex-wrap">
+              {primaryResult.engine_source === 'groq_llm' ? (
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-xs">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                  <span>⚡ Groq LLM ({primaryResult.model_name || 'openai/gpt-oss-120b'})</span>
+                  {primaryResult.latency_ms && <span className="opacity-75 font-mono text-[10px]">· {primaryResult.latency_ms}ms</span>}
+                </span>
+              ) : primaryResult.engine_source === 'token_limit_fallback' ? (
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-xs">
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  <span>⚠️ Token Limit Fallback (Precomputed Verified Solution)</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800 shadow-xs">
+                  <ShieldCheck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                  <span>🛡️ Precomputed Verified Solver (Zero Token Drift)</span>
+                </span>
+              )}
+
+              <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                Confidence: {Math.round((primaryResult.confidence || 0.95) * 100)}%
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

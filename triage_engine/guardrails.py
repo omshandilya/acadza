@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from triage_engine.schema import TriageResult
 
 class GuardrailViolation(Exception):
@@ -11,6 +11,7 @@ class SafetyGuardrails:
     1. Verdicts must exist in taxonomy.verdicts.
     2. Defects must map to taxonomy.repairs; non-defects must have repair=None.
     3. Edits may only touch fields explicitly permitted by taxonomy.repairs[repair]['fields'].
+       - If field is not permitted, SOFT-CORRECT: reroute to faculty_review and clear the edit.
     4. If taxonomy.repairs[repair]['auto'] == False, route MUST be 'faculty_review'.
     5. If verdict != 'defect', route MUST be 'no_change' and edit MUST be None.
     6. Confidence must be between 0.0 and 1.0.
@@ -22,7 +23,27 @@ class SafetyGuardrails:
         self.valid_verdicts = set(taxonomy.get("verdicts", {}).keys())
         self.valid_repairs = taxonomy.get("repairs", {})
 
+    def _soft_correct(self, result: TriageResult, field: str, repair: str, allowed_fields: list) -> TriageResult:
+        """
+        Soft correction: when LLM returns an edit field not in taxonomy's allowed list,
+        reroute to faculty_review and clear the edit rather than crashing the batch.
+        """
+        print(
+            f"  [GUARDRAIL SOFT] {result.reportId}: edit field '{field}' not in "
+            f"allowed {allowed_fields} for repair '{repair}'. "
+            f"Rerouting to faculty_review — human must verify."
+        )
+        d = result.__dict__.copy()
+        d["route"] = "faculty_review"
+        d["edit"] = None
+        d["evidence"] = (d.get("evidence") or "") + (
+            f" [Guardrail soft-correction: edit field '{field}' outside taxonomy scope "
+            f"for '{repair}'; sent to faculty_review for human verification.]"
+        )
+        return result.__class__(**d)
+
     def validate(self, result: TriageResult, question: Dict[str, Any] = None) -> List[str]:
+        """Return list of hard violation strings. Soft corrections are handled in enforce()."""
         violations = []
 
         # 1. Verdict check
@@ -40,26 +61,20 @@ class SafetyGuardrails:
                 allowed_fields = repair_meta.get("fields", [])
                 is_auto = repair_meta.get("auto", False)
 
-                # Check route safety
+                # Check route safety (auto:false must go to faculty_review)
                 if not is_auto and result.route != "faculty_review":
                     violations.append(
                         f"Repair '{result.repair}' has auto:false; route must be 'faculty_review', got '{result.route}'."
                     )
 
-                # Check edit field scope
+                # Check edit field scope — field-not-allowed is a SOFT violation handled in enforce()
                 if result.edit:
                     field = result.edit.get("field")
-                    if field not in allowed_fields:
-                        violations.append(
-                            f"Edit field '{field}' violates repair scope for '{result.repair}'. Allowed: {allowed_fields}"
-                        )
-                    
-                    # Check surgical edit against target question if provided
-                    if question:
+                    if field in allowed_fields and question:
+                        # Hard-check: surgical find string must exist in the actual question text
                         qtype = question.get("questionType", "")
                         content = question.get(qtype, {})
                         find_str = result.edit.get("find")
-                        
                         if field in content and find_str:
                             val = content[field]
                             if isinstance(val, str) and find_str not in val:
@@ -88,8 +103,23 @@ class SafetyGuardrails:
         return violations
 
     def enforce(self, result: TriageResult, question: Dict[str, Any] = None) -> TriageResult:
+        """
+        Apply soft corrections first (edit field scope), then validate hard invariants.
+        Returns the (possibly corrected) TriageResult. Raises GuardrailViolation on hard failures.
+        """
+        # --- Soft correction pass ---
+        if result.verdict == "defect" and result.repair and result.edit:
+            repair_meta = self.valid_repairs.get(result.repair, {})
+            allowed_fields = repair_meta.get("fields", [])
+            field = result.edit.get("field")
+            if allowed_fields is not None and field not in allowed_fields:
+                result = self._soft_correct(result, field, result.repair, allowed_fields)
+
+        # --- Hard validation pass on (possibly corrected) result ---
         violations = self.validate(result, question)
         if violations:
-            raise GuardrailViolation(f"Guardrail check failed for report {result.reportId}: {'; '.join(violations)}")
+            raise GuardrailViolation(
+                f"Guardrail check failed for report {result.reportId}: {'; '.join(violations)}"
+            )
         return result
 

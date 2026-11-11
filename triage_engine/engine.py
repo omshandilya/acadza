@@ -11,6 +11,7 @@ class TriageEngine:
     """
     Core Triage Engine:
     Orchestrates ingestion, grouping, Groq LLM solver verification, guardrails, and reply synthesis.
+    Tracks execution source transparently: 'groq_llm' vs 'precomputed_solver' vs 'token_limit_fallback'.
     """
 
     def __init__(
@@ -34,9 +35,9 @@ class TriageEngine:
             self.use_llm = self.groq_client.is_configured()
 
         if self.use_llm:
-            print(f"[TriageEngine] Groq LLM integration ACTIVE (model: {self.groq_client.model})")
+            print(f"[TriageEngine] ⚡ Live Groq LLM ACTIVE (Model: {self.groq_client.model})")
         else:
-            print("[TriageEngine] Running in Verified Deterministic Engine mode (set GROQ_API_KEY in .env to enable live LLM calls)")
+            print("[TriageEngine] 🛡️ Running in Verified Deterministic Engine mode (set GROQ_API_KEY in .env for live LLM)")
 
         # Precompute question report counts for grouping & urgency analysis
         self.report_counts = {}
@@ -53,28 +54,39 @@ class TriageEngine:
             raise ValueError(f"Question {qid} not found in question bank.")
 
         result = None
+        engine_source = "precomputed_solver"
+        model_name = None
+        latency_ms = None
 
         # ── 1. Live Groq LLM Inference (if configured) ─────────────────────────
         if self.use_llm:
-            try:
-                llm_output = self.groq_client.triage_report(report, question, self.taxonomy)
-                if llm_output and isinstance(llm_output, dict):
-                    result = TriageResult(
-                        reportId=rid,
-                        questionId=qid,
-                        verdict=llm_output.get("verdict", "no_error"),
-                        repair=llm_output.get("repair"),
-                        edit=llm_output.get("edit"),
-                        route=llm_output.get("route", "no_change"),
-                        confidence=float(llm_output.get("confidence", 0.90)),
-                        evidence=llm_output.get("evidence", "Evaluated by Groq LLM solver."),
-                        student_reply=llm_output.get("student_reply") or StudentReplySynthesizer.generate(
-                            report, llm_output.get("verdict", "no_error"), llm_output.get("repair")
-                        )
-                    )
-            except Exception as e:
-                print(f"[TriageEngine Warning] Groq evaluation failed for {rid}: {e}. Falling back to solver map.")
-                result = None
+            llm_output, status, lat = self.groq_client.triage_report(report, question, self.taxonomy)
+            if status == "groq_llm" and llm_output and isinstance(llm_output, dict):
+                engine_source = "groq_llm"
+                model_name = self.groq_client.model
+                latency_ms = lat
+                result = TriageResult(
+                    reportId=rid,
+                    questionId=qid,
+                    verdict=llm_output.get("verdict", "no_error"),
+                    repair=llm_output.get("repair"),
+                    edit=llm_output.get("edit"),
+                    route=llm_output.get("route", "no_change"),
+                    confidence=float(llm_output.get("confidence", 0.90)),
+                    evidence=llm_output.get("evidence", "Evaluated independently by Groq LLM solver."),
+                    student_reply=llm_output.get("student_reply") or StudentReplySynthesizer.generate(
+                        report, llm_output.get("verdict", "no_error"), llm_output.get("repair")
+                    ),
+                    engine_source=engine_source,
+                    model_name=model_name,
+                    latency_ms=latency_ms
+                )
+            elif status == "token_limit":
+                engine_source = "token_limit_fallback"
+                print(f"  [SOURCE: TOKEN LIMIT FALLBACK] Report {rid} quota exhausted -> Using verified solver")
+            else:
+                engine_source = "precomputed_solver"
+                print(f"  [SOURCE: PRECOMPUTED SOLVER] Report {rid} using verified solver")
 
         # ── 2. Verified Solver Map Fallback ────────────────────────────────────
         if result is None:
@@ -94,7 +106,6 @@ class TriageEngine:
                 confidence = 0.50
                 evidence = "No conclusive defect or error identified."
 
-            # Synthesize empathetic student reply
             student_reply = StudentReplySynthesizer.generate(
                 report=report,
                 verdict=verdict,
@@ -112,18 +123,21 @@ class TriageEngine:
                 route=route,
                 confidence=confidence,
                 evidence=evidence,
-                student_reply=student_reply
+                student_reply=student_reply,
+                engine_source=engine_source,
+                model_name=model_name,
+                latency_ms=latency_ms
             )
 
         # ── 3. Safety Guardrails Invariant Enforcement ─────────────────────────
-        # Enforce taxonomy boundaries, allowed fields, and non-bypassable safety invariants
-        self.guardrails.enforce(result, question)
+        result = self.guardrails.enforce(result, question)
 
         return result
 
     def run(self) -> List[TriageResult]:
         results = []
-        for r in self.reports:
+        for i, r in enumerate(self.reports, 1):
+            print(f"[{i:02d}/{len(self.reports):02d}] Triage Processing: {r['reportId']} (Question: {r['questionId'][:10]}...)")
             res = self.process_report(r)
             results.append(res)
         return results

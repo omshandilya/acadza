@@ -10,12 +10,12 @@
     "not_actionable": "Empty or unintelligible comment and checks found nothing."
   },
   "repairs": {
-    "spelling":          {"fields": ["question", "solution"], "auto": true,  "label": "Spelling or grammar. Words only; no value, symbol or image moves."},
-    "noise":             {"fields": ["question", "solution"], "auto": true,  "label": "Stray text: question numbers, 'Space for rough work', source labels."},
-    "exam_reference":    {"fields": ["question", "solution"], "auto": true,  "label": "'(JEE Main 2019)' style tag inside the question text."},
-    "markup_leak":       {"fields": ["question", "solution"], "auto": true,  "label": "Raw LaTeX / HTML visible as text."},
+    "spelling":          {"fields": ["question", "solution", "options"], "auto": true,  "label": "Spelling or grammar. Words only; no value, symbol or image moves."},
+    "noise":             {"fields": ["question", "solution", "options"], "auto": true,  "label": "Stray text: question numbers, 'Space for rough work', source labels."},
+    "exam_reference":    {"fields": ["question", "solution", "options"], "auto": true,  "label": "'(JEE Main 2019)' style tag inside the question text."},
+    "markup_leak":       {"fields": ["question", "solution", "options"], "auto": true,  "label": "Raw LaTeX / HTML visible as text."},
     "answer_form":       {"fields": ["question"],             "auto": true,  "label": "Unit / rounding / answer form not stated. Additive only."},
-    "notation":          {"fields": ["question", "solution"], "auto": true,  "label": "A symbol, exponent or bracket lost in one expression."},
+    "notation":          {"fields": ["question", "solution", "options"], "auto": true,  "label": "A symbol, exponent or bracket lost in one expression."},
     "stem_data":         {"fields": ["question"],             "auto": true,  "label": "A value or condition missing/wrong - only when the solution states it without doubt."},
     "option_repair":     {"fields": ["question"],             "auto": true,  "label": "An option missing, cut off or blank. Stem text must not change."},
     "solution_fix":      {"fields": ["solution"],             "auto": true,  "label": "The solution has a wrong step, or belongs to another question."},
