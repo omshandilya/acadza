@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Native MathML styling for crisp rendering */
+  math {
+    font-family: 'Cambria Math', 'STIX Two Math', 'Latin Modern Math', 'KaTeX_Main', serif;
+    font-size: 1.05em;
+    direction: ltr;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 1px;
+  }
+
+  math mrow, math mfrac, math msqrt, math msub, math msup, math msubsup, math mover, math munder {
+    padding: 0 1px;
+  }
+
+  /* Style question HTML content smoothly */
+  .question-rendered h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  .question-rendered ol, .question-rendered ul {
+    margin-left: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
