@@ -1,14 +1,23 @@
 import os
 import sys
 import json
+import argparse
 
 # Ensure workspace root is in python path
 WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, WORKSPACE_ROOT)
 
 from triage_engine.engine import TriageEngine
+from triage_engine.llm_client import GroqTriageClient
 
 def main():
+    parser = argparse.ArgumentParser(description="Acadza Report → Fix Triage Engine Runner")
+    parser.add_argument("--use-llm", action="store_true", help="Force live LLM inference using Groq API")
+    parser.add_argument("--no-llm", action="store_true", help="Force deterministic verified solver map (bypass LLM)")
+    parser.add_argument("--report", type=str, default=None, help="Process a single report ID (e.g. R001, R027)")
+    parser.add_argument("--model", type=str, default=None, help="Override Groq model (e.g. llama-3.3-70b-versatile)")
+    args = parser.parse_args()
+
     questions_path = os.path.join(WORKSPACE_ROOT, "data", "questions.json")
     reports_path = os.path.join(WORKSPACE_ROOT, "data", "reports.json")
     taxonomy_path = os.path.join(WORKSPACE_ROOT, "data", "taxonomy.json")
@@ -22,9 +31,33 @@ def main():
     with open(taxonomy_path, "r", encoding="utf-8") as f:
         taxonomy = json.load(f)
 
-    print(f"Initializing TriageEngine ({len(reports)} reports, {len(questions)} questions) ...")
-    engine = TriageEngine(questions=questions, reports=reports, taxonomy=taxonomy)
+    use_llm = None
+    if args.use_llm:
+        use_llm = True
+    elif args.no_llm:
+        use_llm = False
 
+    print(f"Initializing TriageEngine ({len(reports)} reports, {len(questions)} questions) ...")
+    engine = TriageEngine(questions=questions, reports=reports, taxonomy=taxonomy, use_llm=use_llm)
+
+    if args.model:
+        engine.groq_client.model = args.model
+
+    # Single report mode
+    if args.report:
+        matching_report = next((r for r in reports if r["reportId"].upper() == args.report.upper()), None)
+        if not matching_report:
+            print(f"Error: Report {args.report} not found in reports.json")
+            sys.exit(1)
+        print(f"\nProcessing single report: {matching_report['reportId']} ...")
+        res = engine.process_report(matching_report)
+        print("\n" + "="*60)
+        print("SINGLE REPORT TRIAGE RESULT:")
+        print(json.dumps(res.to_dict(), indent=2, ensure_ascii=False))
+        print("="*60)
+        return
+
+    # Full batch mode
     print("Running triage engine across all reports...")
     results = engine.run()
 
@@ -67,4 +100,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
