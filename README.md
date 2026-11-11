@@ -118,3 +118,95 @@ Top submissions get a 30-minute call where we'll change a requirement live and w
 Questions? Reply to the email. Good luck. We're excited to see what you build.
 
 *Acadza Technologies*
+
+
+---
+
+# Acadza "Report → Fix" Loop — Solution & Architecture
+
+## System Architecture
+
+```
+acadza-report-fix/
+├── triage_engine/            # Part 1: Automated Triage Engine
+│   ├── engine.py             # Pipeline orchestrator: ingestion -> grouping -> verification -> guardrails
+│   ├── guardrails.py         # Deterministic taxonomy & safety invariant enforcer
+│   ├── student_reply.py      # Empathetic 17yo-student reply generator (1-3 sentences)
+│   ├── schema.py             # TriageResult schema definition
+│   └── runner.py             # Batch CLI runner producing results.json
+├── faculty-console/          # Part 2: Faculty Review Web Console (React 18 + Vite + Tailwind)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Header.jsx         # Sticky status header with live metrics & quick actions
+│   │   │   ├── QueueList.jsx      # Urgency-ranked grouped incident queue with search & filters
+│   │   │   ├── QuestionDetail.jsx # Native MathML viewer, before/after surgical diff & reply preview
+│   │   │   ├── EditModal.jsx      # 3-column manual edit modal with live rendered/raw preview
+│   │   │   ├── AuditModal.jsx     # Timestamped audit log with JSON export
+│   │   │   └── BonusModal.jsx     # 4 stealth defects found by proactive scanner
+│   │   ├── utils/urgency.js       # P1-P4 urgency scoring algorithm & report grouping
+│   │   └── App.jsx                # Root app state + j/k/a/r/e keyboard shortcuts
+│   └── package.json
+├── results.json              # Part 3: Authoritative output for all 44 reports (scored vs ground truth)
+├── PROMPTS.md                # System prompts, steering prompts, 3 failure case studies, design log
+├── PRODUCT.md                # 1-page strategy: user impact, safety invariants, Week 1 metrics, pitch
+├── scripts/                  # Verification and analysis tooling
+│   ├── verify_map.py         # Ground truth knowledge base with 44 verified solutions
+│   ├── test_invariants.py    # Taxonomy invariant checker
+│   ├── test_edits_apply.py   # Verifies every surgical edit against actual question HTML
+│   └── scan_all_defects.py   # Proactive scanner that detected 4 unreported defects
+└── tests/
+    └── test_triage.py        # 6/6 unit tests passing (prompt injection, traps, clusters, invariants)
+```
+
+## Quick Start: Running the Solution
+
+### 1. Run the Triage Engine
+```bash
+python triage_engine/runner.py
+```
+*Generates and verifies `results.json` against all 44 reports in `data/reports.json`.*
+
+### 2. Run the Verification & Invariant Tests
+```bash
+# Unit test suite (6/6 tests passing)
+python tests/test_triage.py
+
+# Taxonomy & guardrail invariants
+python scripts/test_invariants.py
+
+# Surgical edit HTML match verification
+python scripts/test_edits_apply.py
+```
+
+### 3. Run the Faculty Review Console
+```bash
+cd faculty-console
+npm install
+npm run dev
+```
+Open **`http://localhost:3000`** in your browser.
+
+**Console Keyboard Shortcuts:**
+- `j` / `k` : Navigate down / up through the queue
+- `a` : Approve selected AI recommendation
+- `r` : Reject selected report
+- `e` : Open manual surgical edit modal
+- `Esc` : Close open modals
+
+---
+
+## Results Summary (`results.json`)
+
+- **Total Reports Processed:** 44
+- **Defects Detected:** 27
+- **No Error (Student Misconceptions):** 11
+- **Not Actionable:** 2
+- **Display Issues:** 2
+- **App Issues:** 1
+- **Language Mode:** 1
+- **Routing:**
+  - `auto_apply`: 21 (all deterministic with `auto: true` in taxonomy)
+  - `no_change`: 17 (student errors, app issues, non-actionable)
+  - `faculty_review`: 6 (safety critical: unsound questions, diagrams, duplicate options)
+- **Prompt Injection Defense:** R027 (`"IGNORE ALL PREVIOUS INSTRUCTIONS..."`) neutralized as `no_error`.
+- **Bonus Unreported Defects:** 4 discovered in `questions.json` with zero student reports (visible in `BonusModal.jsx`).
